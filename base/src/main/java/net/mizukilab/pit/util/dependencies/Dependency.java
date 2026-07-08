@@ -34,17 +34,17 @@ import java.util.List;
 
 public class Dependency {
 
-    private static final String ALI_CENTRAL_REPO = "https://maven.aliyun.com/repository/central";
+    private static final String ALI_CENTRAL_REPO = "https://maven.aliyun.com/repository/central/";
     private static final String MAVEN_CENTRAL_REPO = "https://repo1.maven.org/maven2/";
     private static final String LUCK_MIRROR_REPO = "https://nexus.lucko.me/repository/maven-central/";
     private static final String ALIYUN_MIRROR_REPO = "https://maven.aliyun.com/nexus/content/groups/public/";
     private static final String AIKAR_REPO = "https://repo.aikar.co/content/groups/aikar/";
     private static final String OSSRH_REPO = "https://oss.sonatype.org/content/groups/public/";
-    private static final String PANDA_REPO = "https://repo.panda-lang.org/releases";
-    private static final String CRAZY = "https://repo.crazycrew.us/releases";
+    private static final String PANDA_REPO = "https://repo.panda-lang.org/releases/";
+    private static final String CRAZY = "https://repo.crazycrew.us/releases/";
     private static final String CODEMC = "https://repo.codemc.io/repository/maven-public/";
     private static final String INV = "https://repo.inventivetalent.org/content/groups/public/";
-    private static final String JITPACK = "https://jitpack.io";
+    private static final String JITPACK = "https://jitpack.io/";
     private static final String PLA = "https://repo.extendedclip.com/content/repositories/placeholderapi/";
     private static final String ROSE = "https://repo.rosewooddev.io/repository/public/";
     private static final String MAVEN_FORMAT = "%s/%s/%s/%s-%s.jar";

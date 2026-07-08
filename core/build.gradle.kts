@@ -12,9 +12,9 @@ buildscript {
     }
 }
 plugins {
-    kotlin("plugin.lombok") version "2.1.20"
-    id("io.freefair.lombok") version "8.10"
-    kotlin("jvm") version "2.1.20"
+    kotlin("plugin.lombok")
+    id("io.freefair.lombok")
+    kotlin("jvm")
     alias(libs.plugins.shadow)
 }
 
@@ -23,7 +23,7 @@ if (devBuild) {
     println("WARN! 当前使用DevBuild模式构建!!,请详细斟酌是否构建")
 }
 group = "cn.klee"
-version = "core"
+version = rootProject.extra["gitVersionString"].toString()
 repositories {
 
     maven("https://maven.cleanroommc.com")
@@ -39,7 +39,7 @@ repositories {
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.panda-lang.org/releases")
 }
-val gitVersion = rootProject.extra["gitVersionString"].toString()
+val gitVersion = version.toString()
 
 val injectGitVersion by tasks.registering {
     group = "versioning"

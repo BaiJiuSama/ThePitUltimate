@@ -159,13 +159,9 @@ public class DependencyManager {
             try {
                 URLConnection connection = url.openConnection();
 
-                // i == 0 when we're trying to use the mirror repo.
-                // set some timeout properties so when/if this repository goes offline, we quickly fallback to central.
-                if (i == 0) {
-                    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36");
-                    connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(5));
-                    connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(10));
-                }
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36");
+                connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(5));
+                connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(10));
 
                 try (InputStream in = connection.getInputStream()) {
                     // download the jar content

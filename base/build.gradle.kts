@@ -2,12 +2,12 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.util.*
 
 plugins {
-    kotlin("plugin.lombok") version "2.1.20"
-    id("io.freefair.lombok") version "8.10"
+    kotlin("plugin.lombok")
+    id("io.freefair.lombok")
     id("java-library")
     id("java")
-    id("org.jetbrains.dokka") version "1.9.20" // 请根据需要调整版本号
-    kotlin("jvm") version "2.1.20"
+    id("org.jetbrains.dokka")
+    kotlin("jvm")
     alias(libs.plugins.shadow)
 }
 
