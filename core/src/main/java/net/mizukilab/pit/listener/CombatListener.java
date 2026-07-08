@@ -1232,25 +1232,8 @@ public class CombatListener implements Listener {
 //                ins.handlePlayerKilled(perkPlayerLevel, killer, player, coinsAtomic, expAtomic);
 //            }
 //        }
-        killerProfile.getUnlockedPerkMap().values().forEach(i -> {
-            AbstractPerk abstractPerk = i.getHandle(perkFactory.getPerkMap());
-            if (!abstractPerk.isPassive()) {
-                return;
-            }
-            if (abstractPerk instanceof IPlayerKilledEntity ins) {
-                ins.handlePlayerKilled(i.getLevel(), killer, player, coinsAtomic, expAtomic);
-            }
-        });
-        killerProfile.getChosePerk().values().forEach(i -> {
-            AbstractPerk abstractPerk = i.getHandle(perkFactory.getPerkMap());
-            if (abstractPerk.isPassive()) {
-                return;
-            }
-            if (abstractPerk instanceof IPlayerKilledEntity ins) {
-
-                ins.handlePlayerKilled(i.getLevel(), killer, player, coinsAtomic, expAtomic);
-            }
-        });
+        handlePerkKilledEntityEffects(killerProfile.getUnlockedPerkMap().values(), perkFactory, true, killer, player, coinsAtomic, expAtomic);
+        handlePerkKilledEntityEffects(killerProfile.getChosePerk().values(), perkFactory, false, killer, player, coinsAtomic, expAtomic);
 
         for (IPlayerKilledEntity ins : ThePit.getInstance().getEnchantmentFactor().getPlayerKilledEntities()) {
             AbstractEnchantment enchant = (AbstractEnchantment) ins;
@@ -1411,6 +1394,23 @@ public class CombatListener implements Listener {
         EventFactory factory = ThePit.getInstance().getEventFactory();
         if (factory.getActiveEpicEvent() != null) {
             event.setCancelled(true);
+        }
+    }
+
+    private void handlePerkKilledEntityEffects(Collection<PerkData> perkDataList, PerkFactory perkFactory, boolean passive, Player killer, LivingEntity player, AtomicDouble coinsAtomic, AtomicDouble expAtomic) {
+        for (PerkData perkData : perkDataList) {
+            if (perkData == null) {
+                continue;
+            }
+
+            AbstractPerk abstractPerk = perkData.getHandle(perkFactory.getPerkMap());
+            if (abstractPerk == null || abstractPerk.isPassive() != passive) {
+                continue;
+            }
+
+            if (abstractPerk instanceof IPlayerKilledEntity ins) {
+                ins.handlePlayerKilled(perkData.getLevel(), killer, player, coinsAtomic, expAtomic);
+            }
         }
     }
 
