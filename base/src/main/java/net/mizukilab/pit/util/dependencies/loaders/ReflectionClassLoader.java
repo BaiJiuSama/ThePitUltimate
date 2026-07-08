@@ -25,24 +25,28 @@
 
 package net.mizukilab.pit.util.dependencies.loaders;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import sun.misc.Unsafe;
+
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class ReflectionClassLoader implements PluginClassLoader {
 
-    private static final Method ADD_URL_METHOD;
+    private static final Unsafe UNSAFE = lookupUnsafe();
+    private static final long UCP_OFFSET = fieldOffset(URLClassLoader.class, "ucp");
+    private static final long UCP_PATH_OFFSET;
+    private static final long UCP_UNOPENED_URLS_OFFSET;
 
     static {
-        try {
-            ADD_URL_METHOD = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            ADD_URL_METHOD.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new ExceptionInInitializerError(e);
-        }
+        Object probe = UNSAFE.getObject(new URLClassLoader(new URL[0]), UCP_OFFSET);
+        Class<?> urlClassPathType = probe.getClass();
+        UCP_PATH_OFFSET = fieldOffset(urlClassPathType, "path");
+        UCP_UNOPENED_URLS_OFFSET = fieldOffset(urlClassPathType, "unopenedUrls");
     }
 
     private final URLClassLoader classLoader;
@@ -59,9 +63,45 @@ public class ReflectionClassLoader implements PluginClassLoader {
     @Override
     public void loadJar(Path file) {
         try {
-            ADD_URL_METHOD.invoke(this.classLoader, file.toUri().toURL());
-        } catch (IllegalAccessException | InvocationTargetException | MalformedURLException e) {
+            appendUrl(file.toUri().toURL());
+        } catch (MalformedURLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void appendUrl(URL url) {
+        Object urlClassPath = UNSAFE.getObject(this.classLoader, UCP_OFFSET);
+
+        @SuppressWarnings("unchecked")
+        ArrayList<URL> path = (ArrayList<URL>) UNSAFE.getObject(urlClassPath, UCP_PATH_OFFSET);
+
+        @SuppressWarnings("unchecked")
+        Collection<URL> unopenedUrls = (Collection<URL>) UNSAFE.getObject(urlClassPath, UCP_UNOPENED_URLS_OFFSET);
+
+        synchronized (unopenedUrls) {
+            if (path.contains(url)) {
+                return;
+            }
+            unopenedUrls.add(url);
+            path.add(url);
+        }
+    }
+
+    private static Unsafe lookupUnsafe() {
+        try {
+            Field field = Unsafe.class.getDeclaredField("theUnsafe");
+            field.setAccessible(true);
+            return (Unsafe) field.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
+    private static long fieldOffset(Class<?> type, String name) {
+        try {
+            return UNSAFE.objectFieldOffset(type.getDeclaredField(name));
+        } catch (NoSuchFieldException e) {
+            throw new ExceptionInInitializerError(e);
         }
     }
 }

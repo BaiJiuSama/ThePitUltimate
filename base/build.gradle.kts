@@ -79,11 +79,18 @@ dependencies {
     compileOnly(libs.adventure.bukkit)
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+    options.release.set(21)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 tasks.register<Jar>("dokkaHtmlJar") {
     dependsOn(tasks.dokkaHtml)
