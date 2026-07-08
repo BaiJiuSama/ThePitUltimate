@@ -6,7 +6,6 @@ import net.mizukilab.pit.enchantment.rarity.EnchantmentRarity;
 import net.mizukilab.pit.parm.listener.IPlayerKilledEntity;
 import net.mizukilab.pit.util.cooldown.Cooldown;
 import com.google.common.util.concurrent.AtomicDouble;
-import nya.Skip;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -16,7 +15,7 @@ import org.bukkit.potion.PotionEffectType;
  * @Author: Misoryan
  * @Created_In: 2021/2/8 13:58
  */
-@Skip
+
 @WeaponOnly
 public class CounterJanitorEnchant extends AbstractEnchantment implements IPlayerKilledEntity {
 

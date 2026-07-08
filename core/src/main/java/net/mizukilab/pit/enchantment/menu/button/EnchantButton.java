@@ -37,7 +37,6 @@ import net.mizukilab.pit.util.item.ItemBuilder;
 import net.mizukilab.pit.util.item.ItemUtil;
 import net.mizukilab.pit.util.menu.Button;
 import net.mizukilab.pit.util.random.RandomUtil;
-import nya.Skip;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -58,7 +57,7 @@ import java.util.stream.Collectors;
  * @Author: EmptyIrony
  * @Date: 2021/2/11 16:51
  */
-@Skip
+
 public class EnchantButton extends Button {
 
     SecureRandom random = RandomUtil.random;

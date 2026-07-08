@@ -1,9 +1,7 @@
 package net.mizukilab.pit.data.operator;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import nya.Skip;
 
-@Skip
 public class Promise extends ObjectArraySet<Runnable> {
 
     boolean done = false;

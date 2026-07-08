@@ -32,7 +32,6 @@ import net.mizukilab.pit.enchantment.EnchantmentFactor;
 import net.mizukilab.pit.hologram.HologramFactory;
 import net.mizukilab.pit.item.IItemFactory;
 import net.mizukilab.pit.item.ItemFactor;
-import net.mizukilab.pit.license.CommonLoader;
 import net.mizukilab.pit.listener.SafetyJoinListener;
 import net.mizukilab.pit.map.MapSelector;
 import net.mizukilab.pit.medal.MedalFactory;
@@ -75,16 +74,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.slf4j.Logger;
-import pku.yim.license.MagicLicense;
-import pku.yim.license.PluginProxy;
-import pku.yim.license.Resource;
 import redis.clients.jedis.JedisPool;
 import spg.lgdev.iSpigot;
-import zone.rong.imaginebreaker.ImagineBreaker;
 
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -94,7 +87,7 @@ import java.util.function.Function;
 /**
  * @author EmptyIrony, Misoryan, KleeLoveLife, Rabbit0w0, Araykal
  */
-public class ThePit extends JavaPlugin implements PluginMessageListener, PluginProxy {
+public class ThePit extends JavaPlugin implements PluginMessageListener {
     public static String BASE_VERSION;
     public static PitInternalHook api;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(ThePit.class);
@@ -225,10 +218,20 @@ public class ThePit extends JavaPlugin implements PluginMessageListener, PluginP
             return;
         }
         //Post load, delayed init
-        Bukkit.getScheduler().runTask(this,() -> {
-            CommonLoader.bootstrap(this);
-            postLoad();
+        Bukkit.getScheduler().runTask(this, () -> {
+            try {
+                startCoreLoader();
+                postLoad();
+            } catch (Exception e) {
+                getLogger().severe("Failed to start ThePit core module.");
+                e.printStackTrace();
+                Bukkit.getPluginManager().disablePlugin(this);
+            }
         });
+    }
+
+    private void startCoreLoader() throws ReflectiveOperationException {
+        Class.forName("net.mizukilab.pit.Loader").getMethod("start").invoke(null);
     }
 
     private void postLoad() {
@@ -512,27 +515,7 @@ public class ThePit extends JavaPlugin implements PluginMessageListener, PluginP
 
 
     public final void onLoad() {
-        ImagineBreaker.openBootModules();
-        ImagineBreaker.wipeMethodFilters();
-        ImagineBreaker.wipeFieldFilters();
         instance = this;
-        try {
-            InetAddress inet4Address = Inet4Address.getByName("kqc.netty.asia");
-            boolean reachable = inet4Address.isReachable(2000);
-            if (!reachable) {
-                Bukkit.shutdown();
-
-                throw new Exception("fuck you");
-            }
-        } catch (Exception e) {
-            try {
-                System.exit(114514);
-                //Exit blocker
-            } catch (Throwable e2) {
-                Thread.currentThread().getThreadGroup().enumerate(new Thread[0]);
-            }
-        }
-        CommonLoader.preBootstrap(this);
         DependencyManager dependencyManager = new DependencyManager(this, new ReflectionClassLoader(this));
         dependencyManager.loadDependencies(
                 new Dependency("fastutil", "it.unimi.dsi", "fastutil", "8.5.15", LoaderType.REFLECTION),
@@ -900,29 +883,17 @@ public class ThePit extends JavaPlugin implements PluginMessageListener, PluginP
         this.factory = factory;
     }
 
-    @Override
     public void info(String s) {
         log.info(s);
     }
 
-    @Override
     public void disablePlugin() {
         onDisable();
-    }
-
-    @Override
-    public boolean isPrimaryThread() {
-        return Bukkit.isPrimaryThread();
     }
 
 
     public static PitInternalHook getApi() {
         return api;
-    }
-
-    @Override
-    public Resource getResourceType() {
-        return Resource.CLEAR_LOWERCASE;
     }
 
 }

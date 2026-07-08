@@ -6,7 +6,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.SneakyThrows;
-import nya.Skip;
 import org.bson.Document;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -17,7 +16,7 @@ import java.util.UUID;
  * @Author: EmptyIrony
  * @Date: 2021/1/3 12:57
  */
-@Skip
+
 public class LeaderBoardRunnable extends BukkitRunnable {
 
     @SneakyThrows

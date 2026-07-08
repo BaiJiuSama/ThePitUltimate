@@ -29,7 +29,6 @@ repositories {
 }
 tasks.named<ShadowJar>("shadowJar") {
     archiveFileName.set("ThePitUltimate-$version.jar")
-    relocate("pku.yim.license", "net.mizukilab.pit.license")
     relocate("panda","net.mizukilab.pit.libs")
     relocate("dev.rollczi","net.mizukilab.pit.libs")
     relocate("cn.hutool","net.mizukilab.pit.libs")
@@ -44,7 +43,6 @@ tasks.named<ShadowJar>("shadowJar") {
 
 dependencies {
     compileOnly(fileTree(mapOf("dir" to "../libs", "include" to listOf("*.jar"))))
-    implementation(fileTree(mapOf("dir" to "../packLib", "include" to listOf("*.jar"))))
     api(libs.reflectionhelper)
     api(libs.hutool.crypto)
     api(libs.book)
@@ -61,7 +59,6 @@ dependencies {
     //
     //compileOnly(libs.spigot.get8())
 
-    implementation("zone.rong:imaginebreaker:2.1")
     compileOnly(libs.protocollib)
     compileOnly(libs.luckperms)
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.1.8")

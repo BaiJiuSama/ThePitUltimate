@@ -1,7 +1,6 @@
 package net.mizukilab.pit.util.menu;
 
 import cn.charlotte.pit.ThePit;
-import nya.Skip;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,7 +12,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.PlayerInventory;
 
 //@AutoRegister
-@Skip
+
 public class ButtonListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)

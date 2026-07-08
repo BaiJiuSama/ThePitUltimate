@@ -9,7 +9,6 @@ import net.mizukilab.pit.parm.listener.IPlayerRespawn;
 import net.mizukilab.pit.util.cooldown.Cooldown;
 import net.mizukilab.pit.util.item.ItemBuilder;
 import com.google.common.util.concurrent.AtomicDouble;
-import nya.Skip;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -20,7 +19,7 @@ import org.bukkit.entity.Player;
  */
 
 @ArmorOnly
-@Skip
+
 public class CreativeEnchant extends AbstractEnchantment implements IPlayerKilledEntity, IPlayerRespawn {
 
     @Override

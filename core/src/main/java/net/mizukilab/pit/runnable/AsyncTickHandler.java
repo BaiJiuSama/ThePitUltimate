@@ -7,14 +7,13 @@ import net.mizukilab.pit.actionbar.ActionBarManager;
 import net.mizukilab.pit.data.operator.ProfileOperator;
 import net.mizukilab.pit.item.factory.ItemFactory;
 import net.mizukilab.pit.util.PublicUtil;
-import nya.Skip;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  * Async tick handler
  */
-@Skip
+
 public class AsyncTickHandler extends BukkitRunnable {
 
 

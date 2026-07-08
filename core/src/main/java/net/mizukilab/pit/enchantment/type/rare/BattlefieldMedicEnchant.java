@@ -11,7 +11,6 @@ import net.mizukilab.pit.parm.listener.IPlayerKilledEntity;
 import net.mizukilab.pit.util.PlayerUtil;
 import net.mizukilab.pit.util.cooldown.Cooldown;
 import net.mizukilab.pit.util.time.TimeUtil;
-import nya.Skip;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -25,7 +24,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-@Skip
+
 @ArmorOnly
 public class BattlefieldMedicEnchant extends AbstractEnchantment implements IPlayerKilledEntity, IPlayerDamaged, IActionDisplayEnchant, Listener {
 

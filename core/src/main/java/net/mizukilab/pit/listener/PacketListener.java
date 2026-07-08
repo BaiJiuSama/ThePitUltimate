@@ -6,10 +6,8 @@ import cn.charlotte.pit.data.operator.IOperator;
 import cn.charlotte.pit.data.operator.IProfilerOperator;
 import cn.charlotte.pit.event.PotionAddEvent;
 import com.comphenix.protocol.reflect.EquivalentConverter;
-import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.*;
 import net.minecraft.server.v1_8_R3.*;
-import net.mizukilab.pit.bungee.Payload;
 import net.mizukilab.pit.events.impl.major.RedVSBlueEvent;
 import net.mizukilab.pit.util.item.ItemBuilder;
 import com.comphenix.protocol.PacketType;
@@ -17,7 +15,6 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import lombok.SneakyThrows;
-import nya.Skip;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
@@ -27,7 +24,6 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,10 +31,10 @@ import java.util.List;
  * @Author: EmptyIrony
  * @Date: 2021/2/4 14:56
  */
-@Skip
+
 public class PacketListener extends PacketAdapter {
     public PacketListener() {
-        super(ThePit.getInstance(), PacketType.Play.Server.ENTITY_EQUIPMENT, PacketType.Play.Server.ENTITY_EFFECT,PacketType.Play.Client.CUSTOM_PAYLOAD);//PacketType.Play.Server.SCOREBOARD_TEAM, PacketType.Play.Server.PLAYER_INFO);
+        super(ThePit.getInstance(), PacketType.Play.Server.ENTITY_EQUIPMENT, PacketType.Play.Server.ENTITY_EFFECT);//PacketType.Play.Server.SCOREBOARD_TEAM, PacketType.Play.Server.PLAYER_INFO);
     }
 
     @Override
@@ -57,19 +53,6 @@ public class PacketListener extends PacketAdapter {
 //        }
     }
 
-    @Override
-    public void onPacketReceiving(PacketEvent event) {
-        PacketContainer packet = event.getPacket();
-        if (packet.getType() == PacketType.Play.Client.CUSTOM_PAYLOAD){
-            process(event);
-        }
-    }
-
-    public void process(PacketEvent event){
-        Object handle = event.getPacket().getHandle();
-        if(handle instanceof PacketPlayInCustomPayload oh){
-        }
-    }
     private static void processPlayerTeam(Player player,PacketContainer container){
         String read = container.getStrings().read(0);
         Player player1 = Bukkit.getPlayer(read);

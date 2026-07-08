@@ -1,10 +1,9 @@
 package net.mizukilab.pit.runnable
 
 import net.mizukilab.pit.util.isPrivate
-import nya.Skip
 import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
-@Skip
+
 object PrivatePlayerRunnable : BukkitRunnable() {
 
 
