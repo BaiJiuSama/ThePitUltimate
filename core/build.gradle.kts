@@ -136,6 +136,11 @@ tasks.named<ShadowJar>("shadowJar") {
     relocate("net.jodah", "net.mizukilab.pit.libs")
     relocate("net.jitse", "net.mizukilab.pit.libs")
     relocate("xyz.upperlevel.spigot", "net.mizukilab.pit.libs")
+    relocate("org.mongojack", "net.mizukilab.pit.libs.org.mongojack")
+    relocate("com.fasterxml.jackson", "net.mizukilab.pit.libs.com.fasterxml.jackson")
+    relocate("com.mongodb", "net.mizukilab.pit.libs.com.mongodb")
+    relocate("org.bson", "net.mizukilab.pit.libs.org.bson")
+    relocate("de.undercouch.bson4jackson", "net.mizukilab.pit.libs.de.undercouch.bson4jackson")
     if (!devBuild) {
         exclude("org/**")
     }
@@ -171,8 +176,8 @@ dependencies {
     compileOnly(libs.narshorn)
     compileOnly(libs.protocollib)
     compileOnly(libs.jedis)
-    compileOnly("org.mongojack:mongojack:5.0.1")
-    compileOnly("org.mongodb:mongodb-driver-sync:5.2.0")
+    implementation("org.mongojack:mongojack:5.0.1")
+    implementation("org.mongodb:mongodb-driver-sync:5.2.0")
 
     compileOnly(fileTree("libs"))
 
