@@ -56,9 +56,11 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -77,6 +79,8 @@ import static net.mizukilab.pit.util.PublicUtil.processActionBarWithSettingProvi
 
 @AutoRegister
 public class CombatListener implements Listener {
+
+    private static final String DEATH_HANDLED_METADATA = "pit_death_handled";
 
     ;
     public static CombatListener INSTANCE;
@@ -225,7 +229,17 @@ public class CombatListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onKilled(PlayerDeathEvent event) {
         event.setDeathMessage(null);
+        if (event.getEntity().hasMetadata(DEATH_HANDLED_METADATA)) {
+            return;
+        }
         handlePlayerDeath(event.getEntity(), event.getEntity().getKiller(), true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        Location location = getRandomSpawnLocation(event.getPlayer());
+        event.setRespawnLocation(location);
+        event.getPlayer().setBedSpawnLocation(location);
     }
 
     /**
@@ -495,6 +509,11 @@ public class CombatListener implements Listener {
     }
 
     public void handlePlayerDeath(Player player, Player killer, boolean shouldRespawn) {
+        if (player.hasMetadata(DEATH_HANDLED_METADATA)) {
+            return;
+        }
+        player.setMetadata(DEATH_HANDLED_METADATA, new FixedMetadataValue(ThePit.getInstance(), System.currentTimeMillis()));
+
         PlayerProfile playerProfile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
         boolean npc = PlayerUtil.isNPC(player);
         if (killer != null) {
@@ -532,6 +551,7 @@ public class CombatListener implements Listener {
             if(NewConfiguration.INSTANCE.getAlwaysCheckNPC()){
                 player.setGameMode(GameMode.SPECTATOR);
             }
+            player.removeMetadata(DEATH_HANDLED_METADATA, ThePit.getInstance());
             return;
         }
         final Player finalKiller = killer;
@@ -555,24 +575,9 @@ public class CombatListener implements Listener {
 
         //Promotion effect
         if (PlayerUtil.isPlayerChosePerk(player, "assistant_to_the_streaker")
-                && PlayerUtil.isPlayerUnlockedPerk(player, "promotion")) {
-            if (playerProfile.getStreakKills() >= 50) {
-                if (PlayerUtil.isPlayerChosePerk(player, "over_drive")
-                        || PlayerUtil.isPlayerChosePerk(player, "high_lander")
-                        || PlayerUtil.isPlayerChosePerk(player, "beast_mode_mega_streak")
-                        || PlayerUtil.isPlayerChosePerk(player, "hermit")) {
-                    mythicProtectChance = 1;
-                }
-            }
-            if (playerProfile.getStreakKills() > 100) {
-                if ((PlayerUtil.isPlayerChosePerk(player, "uber_streak") && playerProfile.getStreakKills() >= 400)
-                        || PlayerUtil.isPlayerChosePerk(player, "to_the_moon")) {
-                    mythicProtectChance = 1;
-                }
-                if (PlayerUtil.isPlayerChosePerk(player, "uber_streak_plus") && playerProfile.getStreakKills() >= 1000) {
-                    mythicProtectChance = 1;
-                }
-            }
+                && PlayerUtil.isPlayerUnlockedPerk(player, "promotion")
+                && hasPromotionMythicProtection(player, playerProfile)) {
+            mythicProtectChance = 1;
         }
         //Funky Feather Item
         ItemLiveDropEvent itemLiveDropEvent = new ItemLiveDropEvent(mythicProtectChance);
@@ -687,17 +692,27 @@ public class CombatListener implements Listener {
         }
         if (shouldRespawn) {
             ((CraftPlayer) player).getHandle().invulnerableTicks = 40;
-            // player.setHealth(player.getMaxHealth());
-            Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> player.spigot().respawn(), 10);
-            player.setGameMode(GameMode.SPECTATOR);
 
             if (playerProfile.getRespawnTime() <= 1.5) {
                 playerProfile.setRespawnTime(0.1d);
+                respawnTime = 0.1d;
             }
 
-            if (respawnTime > 0.1) {
+            forceRespawn(player);
+            Bukkit.getScheduler().runTask(ThePit.getInstance(), () -> forceRespawn(player));
+            Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> forceRespawn(player), 1L);
+
+            final double finalRespawnTime = respawnTime;
+
+            if (finalRespawnTime > 0.1) {
+                Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> {
+                    if (player.isOnline()) {
+                        player.setGameMode(GameMode.SPECTATOR);
+                    }
+                }, 2L);
+
                 new BukkitRunnable() {
-                    private int remainingTime = (int) respawnTime;
+                    private int remainingTime = (int) finalRespawnTime;
 
                     @Override
                     public void run() {
@@ -713,10 +728,12 @@ public class CombatListener implements Listener {
                 Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> {
                     this.doRespawn(player);
                     TitleUtil.sendTitle(player, "&a已复活！", " ", 5, 5, 20);
-                }, (long) (respawnTime * 20L));
+                }, (long) (finalRespawnTime * 20L));
             } else {
-                Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> doRespawn(player), 1L);
+                Bukkit.getScheduler().runTaskLater(ThePit.getInstance(), () -> doRespawn(player), 2L);
             }
+        } else {
+            player.removeMetadata(DEATH_HANDLED_METADATA, ThePit.getInstance());
         }
     }
 
@@ -724,9 +741,7 @@ public class CombatListener implements Listener {
         if (!player.isOnline()) {
             return;
         }
-        Location location = ThePit.getInstance().getPitConfig()
-                .getSpawnLocations()
-                .get(ThreadLocalRandom.current().nextInt(ThePit.getInstance().getPitConfig().getSpawnLocations().size()));
+        Location location = getRandomSpawnLocation(player);
 
         if (player.getInventory().getLeggings() != null) {
             if (Utils.getEnchantLevel(player.getInventory().getLeggings(), "trash_panda_enchant") >= 1) {
@@ -735,15 +750,20 @@ public class CombatListener implements Listener {
             }
         }
         player.teleport(location);
+        player.setBedSpawnLocation(location);
 
         PlayerProfile.getPlayerProfileByUuid(player.getUniqueId()).setInArena(false);
 
         PlayerUtil.resetPlayer(player, true, false);
+        PlayerUtil.postResetPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
+        player.setNoDamageTicks(40);
+        ((CraftPlayer) player).getHandle().invulnerableTicks = 40;
 
         PlayerProfile.getPlayerProfileByUuid(player.getUniqueId())
                 .applyExperienceToPlayer(player);
         TitleUtil.sendTitle(player, " ", " ", 5, 5, 20);
+        new PitPlayerSpawnEvent(player).callEvent();
 
         for (IPlayerRespawn ins : ThePit.getInstance().getPerkFactory()
                 .getPlayerRespawns()) {
@@ -763,6 +783,40 @@ public class CombatListener implements Listener {
                 ins.handleRespawn(level, player);
             }
         }
+        player.removeMetadata(DEATH_HANDLED_METADATA, ThePit.getInstance());
+    }
+
+    private void forceRespawn(Player player) {
+        if (!player.isOnline()) {
+            return;
+        }
+
+        if (player.isDead()) {
+            player.spigot().respawn();
+        }
+    }
+
+    private Location getRandomSpawnLocation(Player player) {
+        List<Location> spawnLocations = ThePit.getInstance().getPitConfig().getSpawnLocations();
+        if (spawnLocations == null || spawnLocations.isEmpty()) {
+            return player.getWorld().getSpawnLocation();
+        }
+
+        return spawnLocations.get(ThreadLocalRandom.current().nextInt(spawnLocations.size())).clone();
+    }
+
+    private boolean hasPromotionMythicProtection(Player player, PlayerProfile playerProfile) {
+        AbstractPerk activeMegaStreak = PlayerUtil.getActiveMegaStreakObj(player);
+        if (activeMegaStreak == null) {
+            return false;
+        }
+
+        // Uber Streak has an explicit exception: before 400 kills, Promotion protection does not prevent life loss.
+        if ("uber_streak".equals(activeMegaStreak.getInternalPerkName()) && playerProfile.getStreakKills() < 400) {
+            return false;
+        }
+
+        return true;
     }
 
     private void handleAssist(Player player, Player killer, List<DamageData> damageData, long totalDamage) {
@@ -874,7 +928,7 @@ public class CombatListener implements Listener {
                 }
 
                 //Assistant to the streaker effect
-                if (PlayerUtil.isPlayerBoughtPerk(assistPlayer, "assistant_to_the_streaker") && !isNight()) {
+                if (PlayerUtil.isPlayerChosePerk(assistPlayer, "assistant_to_the_streaker") && !isNight()) {
                     assistProfile.setStreakKills(assistProfile.getStreakKills() + Math.floor(100 * percentage) * 0.01);
                 }
                 assistProfile.setAssists(assistProfile.getAssists() + 1);

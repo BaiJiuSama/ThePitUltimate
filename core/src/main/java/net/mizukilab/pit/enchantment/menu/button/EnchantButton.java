@@ -208,6 +208,9 @@ public class EnchantButton extends Button {
         if (profile.getCoins() < getPrice(player, level + 1, color)) {
             return;
         }
+        if (Utils.canUseMythicBook(player, actualItem) && !hasAvailableBookRareEnchantment(player, actualItem, mythicItem, color, level + 1)) {
+            return;
+        }
         if (level == (color == MythicColor.DARK ? 1 : 2)) {
             if (PlayerUtil.getPlayerUnlockedPerkLevel(player, "Mythicism") < 4) {
                 return;
@@ -472,28 +475,87 @@ public class EnchantButton extends Button {
         profile.setEnchantingItem(InventoryUtil.serializeItemStack(mythicItem.toItemStack()));
     }
 
+    private List<AbstractEnchantment> getBookRareResults(Player player, ItemStack item, MythicColor color, int level) {
+        List<AbstractEnchantment> list = ThePit.getInstance()
+                .getEnchantmentFactor()
+                .getEnchantments()
+                .stream()
+                .filter(abstractEnchantment -> abstractEnchantment.canApply(item))
+                .toList();
+        List<AbstractEnchantment> rareResults = list.stream()
+                .filter(abstractEnchantment -> abstractEnchantment.getRarity() == EnchantmentRarity.RARE).collect(Collectors.toList());
+
+        if (color == MythicColor.DARK) {
+            rareResults = list.stream()
+                    .filter(abstractEnchantment -> abstractEnchantment.getRarity() == EnchantmentRarity.DARK_RARE).collect(Collectors.toList());
+        } else if (color == MythicColor.RAGE && level == 1) {
+            rareResults = list.stream().filter(abstractEnchantment -> abstractEnchantment.getRarity() == EnchantmentRarity.RAGE_RARE).collect(Collectors.toList());
+        } else if (color == MythicColor.DARK_GREEN) {
+            rareResults = list.stream().filter(abstractEnchantment -> abstractEnchantment.getRarity() == EnchantmentRarity.SEWER_RARE).collect(Collectors.toList());
+        }
+
+        return rareResults.stream().filter(abstractEnchantment -> !isBlackList(player, abstractEnchantment)).collect(Collectors.toList());
+    }
+
+    private boolean hasAvailableBookRareEnchantment(Player player, ItemStack item, IMythicItem mythicItem, MythicColor color, int level) {
+        return hasAvailableBookRareEnchantment(getBookRareResults(player, item, color, level), new ObjectArrayList<>(mythicItem.getEnchantments().keySet()));
+    }
+
+    private boolean hasAvailableBookRareEnchantment(List<AbstractEnchantment> rareResults, List<AbstractEnchantment> enchantments) {
+        return rareResults.stream().anyMatch(rareEnchantment -> !hasEnchantment(enchantments, rareEnchantment));
+    }
+
+    private boolean hasEnchantment(List<AbstractEnchantment> enchantments, AbstractEnchantment target) {
+        return enchantments.stream().anyMatch(enchantment -> enchantment.getNbtName().equals(target.getNbtName()));
+    }
+
+    private void removeExistingEnchantments(List<AbstractEnchantment> results, List<AbstractEnchantment> enchantments) {
+        results.removeIf(result -> hasEnchantment(enchantments, result));
+    }
+
+    private AbstractEnchantment chooseBookRareEnchantment(List<AbstractEnchantment> rareResults, List<AbstractEnchantment> enchantments) {
+        List<AbstractEnchantment> availableRareResults = new ObjectArrayList<>(rareResults);
+        removeExistingEnchantments(availableRareResults, enchantments);
+        if (availableRareResults.isEmpty()) {
+            return null;
+        }
+        return (AbstractEnchantment) RandomUtil.helpMeToChooseOne(availableRareResults.toArray());
+    }
+
+    private void consumeMythicBook(Player player, IMythicItem mythicItem) {
+        PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
+        profile.setEnchantingBook(null);
+        mythicItem.boostedByBook = true;
+    }
+
     private boolean levelTier3MythicEnchantLogic(ItemStack item, Player player, IMythicItem mythicItem,int level, List<AbstractEnchantment> rareResults, boolean announcement, List<AbstractEnchantment> results, List<AbstractEnchantment> enchantments, MythicColor color) {
         int amount = mythicItem.getEnchantments().size();
         if (amount == 1) { // If this item have only 1 enchantment
             AbstractEnchantment enchantment = null;
             if (Utils.canUseMythicBook(player, item)) { //定义不明
-                AbstractEnchantment rareEnchant = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                AbstractEnchantment rareEnchant = chooseBookRareEnchantment(rareResults, enchantments);
+                if (rareEnchant == null) {
+                    return announcement;
+                }
                 mythicItem.getEnchantments().put(rareEnchant, 3);
+                enchantments.add(rareEnchant);
                 announcement = true;
-                PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
-                profile.setEnchantingBook(null);
                 //add logic TODO
-                results.removeAll(enchantments);
+                removeExistingEnchantments(results, enchantments);
                 if (RandomUtil.hasSuccessfullyByChance(NewConfiguration.INSTANCE.getChance(player, color,level))) {
-                    announcement = true;
-                    rareResults.removeAll(enchantments);
-                    enchantment = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                    removeExistingEnchantments(rareResults, enchantments);
+                    if (!rareResults.isEmpty()) {
+                        announcement = true;
+                        enchantment = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                    } else {
+                        enchantment = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(results.toArray());
+                    }
                 } else {
                     enchantment = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(results.toArray());
                 }
                 enchantments.add(enchantment);
                 mythicItem.getEnchantments().computeInt(enchantment, (a,b) -> max(b, 1));
-                mythicItem.boostedByBook = true;
+                consumeMythicBook(player, mythicItem);
             } else {
                 for (int i = 0; i < 2; i++) {
                     results.removeAll(enchantments);
@@ -523,7 +585,10 @@ public class EnchantButton extends Button {
             }
         } else if (amount == 2) { //21 -> 311
             if (Utils.canUseMythicBook(player, item)) {
-                AbstractEnchantment rareEnchant = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                AbstractEnchantment rareEnchant = chooseBookRareEnchantment(rareResults, enchantments);
+                if (rareEnchant == null) {
+                    return announcement;
+                }
                 Object2IntOpenHashMap<AbstractEnchantment> enchantments1 = mythicItem.getEnchantments();
                 int levelCurrentlyEnchantment = 0;
                 for (Integer value : enchantments1.values()) {
@@ -531,10 +596,9 @@ public class EnchantButton extends Button {
                 }
                 final int lce = levelCurrentlyEnchantment;
                 enchantments1.computeInt(rareEnchant, (a,b) -> max(b, lce >= 6 ? 2 : 3));
+                enchantments.add(rareEnchant);
                 announcement = true;
-                PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
-                profile.setEnchantingBook(null);
-                mythicItem.boostedByBook = true;
+                consumeMythicBook(player, mythicItem);
             } else {
                 results.removeAll(enchantments);
                 AbstractEnchantment enchantment;
@@ -608,12 +672,14 @@ public class EnchantButton extends Button {
             boolean useBook = Utils.canUseMythicBook(player, item);
 
             if (useBook) {
-                AbstractEnchantment rareEnchant = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                AbstractEnchantment rareEnchant = chooseBookRareEnchantment(rareResults, enchantments);
+                if (rareEnchant == null) {
+                    return announcement;
+                }
                 mythicItem.getEnchantments().put(rareEnchant, 3);
+                enchantments.add(rareEnchant);
                 announcement = true;
-                PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
-                profile.setEnchantingBook(null);
-                mythicItem.boostedByBook = true;
+                consumeMythicBook(player, mythicItem);
             } else {
                 int singleLevel = 0;
                 AbstractEnchantment enchantment = null;
@@ -673,12 +739,14 @@ public class EnchantButton extends Button {
             boolean useBook = Utils.canUseMythicBook(player, item);
             if (useBook) {
                 choice = 3;
-                AbstractEnchantment rareEnchant = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+                AbstractEnchantment rareEnchant = chooseBookRareEnchantment(rareResults, enchantments);
+                if (rareEnchant == null) {
+                    return announcement;
+                }
                 mythicItem.getEnchantments().computeInt(rareEnchant, (a,b) -> max(b,3));
+                enchantments.add(rareEnchant);
                 announcement = true;
-                PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
-                profile.setEnchantingBook(null);
-                mythicItem.boostedByBook = true;
+                consumeMythicBook(player, mythicItem);
             }
 
             switch (choice) {
@@ -719,13 +787,15 @@ public class EnchantButton extends Button {
         boolean useBook = Utils.canUseMythicBook(player, item);
         if (useBook) {
             choice = 5;
-            AbstractEnchantment enchantment = (AbstractEnchantment) RandomUtil.helpMeToChooseOne(rareResults.toArray());
+            AbstractEnchantment enchantment = chooseBookRareEnchantment(rareResults, enchantments);
+            if (enchantment == null) {
+                return announcement;
+            }
 
             mythicItem.getEnchantments().computeInt(enchantment, (a,b) -> max(b,3));
+            enchantments.add(enchantment);
             announcement = true;
-            PlayerProfile profile = PlayerProfile.getPlayerProfileByUuid(player.getUniqueId());
-            profile.setEnchantingBook(null);
-            mythicItem.boostedByBook = true;
+            consumeMythicBook(player, mythicItem);
         }
 
         switch (choice) {

@@ -58,7 +58,6 @@ import net.mizukilab.pit.item.type.egg.SpeedEggs
 import net.mizukilab.pit.item.type.mythic.MythicBowItem
 import net.mizukilab.pit.item.type.mythic.MythicLeggingsItem
 import net.mizukilab.pit.item.type.mythic.MythicSwordItem
-import net.mizukilab.pit.item.type.perk.Sceptre
 import net.mizukilab.pit.item.type.sewers.Milk
 import net.mizukilab.pit.item.type.sewers.Rubbish
 import net.mizukilab.pit.listener.*
@@ -91,7 +90,6 @@ import net.mizukilab.pit.perk.type.streak.highlander.GoldNanoFactoryKillStreak
 import net.mizukilab.pit.perk.type.streak.highlander.HighlanderMegaStreak
 import net.mizukilab.pit.perk.type.streak.highlander.KhanateKillStreak
 import net.mizukilab.pit.perk.type.streak.highlander.WitherCraftKillStreak
-import net.mizukilab.pit.perk.type.streak.king.Despot
 import net.mizukilab.pit.perk.type.streak.nonpurchased.*
 import net.mizukilab.pit.perk.type.streak.tothemoon.GoldStack
 import net.mizukilab.pit.perk.type.streak.tothemoon.SuperStreaker
@@ -317,7 +315,6 @@ object PitHook {
             JewelSword::class.java,
             JumpBoostPotion::class.java,
             MythicRepairKit::class.java,
-            Sceptre::class.java,
             PitCactus::class.java,
             SpireSword::class.java,
             MusicalRune::class.java,
@@ -689,8 +686,6 @@ private fun loadPerks() {
         GoldStack::class.java,
         XPStack::class.java,
         SuperStreaker::class.java,
-
-        Despot::class.java,
     )
 
     if (ThePit.getInstance().globalConfig.token == "MyPitNetWork") {

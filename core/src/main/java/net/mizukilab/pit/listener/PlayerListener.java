@@ -213,10 +213,20 @@ public class PlayerListener implements Listener {
         }
 
         bungeeCheck(player);
+        removeUnavailableMegaStreak(profile);
         processAccountStatus(profile, player);
         postSynchronize(profile, player);
         //todo 修复最大生命值
         recoverMaximumHealth(profile, player);
+    }
+
+    private static void removeUnavailableMegaStreak(PlayerProfile profile) {
+        profile.getUnlockedPerkMap().remove("despot_streak");
+
+        PerkData selectedMegaStreak = profile.getChosePerk().get(5);
+        if (selectedMegaStreak != null && "despot_streak".equalsIgnoreCase(selectedMegaStreak.getPerkInternalName())) {
+            profile.getChosePerk().remove(5);
+        }
     }
 
     private static void recoverMaximumHealth(PlayerProfile profile, Player player) {
