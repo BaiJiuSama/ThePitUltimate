@@ -2,7 +2,11 @@ package net.mizukilab.pit.nametag;
 
 import cn.charlotte.pit.ThePit;
 import cn.charlotte.pit.data.PlayerProfile;
+import cn.charlotte.pit.data.sub.PerkData;
 import cn.charlotte.pit.events.genesis.GenesisTeam;
+import cn.charlotte.pit.perk.AbstractPerk;
+import cn.charlotte.pit.perk.MegaStreak;
+import cn.charlotte.pit.perk.PerkFactory;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.mizukilab.pit.events.impl.major.HamburgerEvent;
 import net.mizukilab.pit.events.impl.major.RedVSBlueEvent;
@@ -23,6 +27,7 @@ import java.util.List;
  */
 
 public class NameTagImpl implements NametagAdapter {
+    private final PerkFactory perkFactory = ThePit.getInstance().getPerkFactory();
 
     @Override
     public List<BufferedNametag> getPlate(Player player) {
@@ -76,28 +81,14 @@ public class NameTagImpl implements NametagAdapter {
                 displayName = activeEpicEvent.isRedTeam(profile.getPlayerUuid()) ? CC.translate(profile.getFormattedLevelTagTabSpec() + " &c") : CC.translate(profile.getFormattedLevelTagTabSpec() + " &9");
             } else {
                 displayName = CC.translate(profile.getFormattedLevelTagTabSpec() + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                if (profile.getChosePerk().get(5) != null) {
+                PerkData perkData = profile.getChosePerk().get(5);
+                if (perkData != null) {
                     if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("__removed_mega_streak") && profile.getStreakKills() >= 200) {
                         displayName = CC.translate(profile.getFormattedLevelTagTabSpec() + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
                     }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("over_drive") && profile.getStreakKills() >= 50) {
-                        displayName = CC.translate("&e&l超速传动" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                    }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("high_lander") && profile.getStreakKills() >= 50) {
-                        displayName = CC.translate("&6&l尊贵血统" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                    }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("beast_mode_mega_streak") && profile.getStreakKills() >= 50) {
-                        displayName = CC.translate("&a&l野兽模式" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                    }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("hermit") && profile.getStreakKills() >= 50) {
-                        displayName = CC.translate("&9&l隐士" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                    }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("uber_streak") && profile.getStreakKills() >= 100) {
-                        final int level = Math.min(400, (((int) profile.getStreakKills()) / 100) * 100);
-                        displayName = CC.translate("&d&l登峰造极" + " " + level + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
-                    }
-                    if (profile.getChosePerk().get(5).getPerkInternalName().equalsIgnoreCase("to_the_moon") && profile.getStreakKills() >= 100) {
-                        displayName = CC.translate("&b&l月球之旅" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
+                    AbstractPerk perk = perkFactory.getPerkMap().get(perkData.getPerkInternalName());
+                    if (perk instanceof MegaStreak && profile.getStreakKills() >= ((MegaStreak) perk).getStreakNeed()) {
+                        displayName = CC.translate(perk.getDisplayName() + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
                     }
                     if (SpecialUtil.isPrivate(profile)) {
                         displayName = CC.translate("&b&lPRIVATE" + " " + RankUtil.getPlayerRankColor(profile.getPlayerUuid()));
