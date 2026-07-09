@@ -43,7 +43,7 @@ class UberStreak : AbstractPerk(), Listener, MegaStreak {
     }
 
     override fun getDisplayName(): String {
-        return "&d登峰造极"
+        return "&d&l登峰造极"
     }
 
     override fun getIcon(): Material {

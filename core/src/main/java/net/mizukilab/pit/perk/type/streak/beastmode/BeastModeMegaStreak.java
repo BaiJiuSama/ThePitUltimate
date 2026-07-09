@@ -110,7 +110,7 @@ public class BeastModeMegaStreak extends AbstractPerk implements Listener, ITick
 
     @Override
     public String getDisplayName() {
-        return "&a野兽模式";
+        return "&a&l野兽模式";
     }
 
     @Override

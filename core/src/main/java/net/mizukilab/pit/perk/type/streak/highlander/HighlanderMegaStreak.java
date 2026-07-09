@@ -43,7 +43,7 @@ public class HighlanderMegaStreak extends AbstractPerk implements Listener, IAtt
 
     @Override
     public String getDisplayName() {
-        return "&6尊贵血统";
+        return "&6&l尊贵血统";
     }
 
     @Override

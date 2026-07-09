@@ -48,7 +48,7 @@ public class HermitMegaStreak extends AbstractPerk implements Listener, IPlayerD
 
     @Override
     public String getDisplayName() {
-        return "&9隐士";
+        return "&9&l隐士";
     }
 
     @Override

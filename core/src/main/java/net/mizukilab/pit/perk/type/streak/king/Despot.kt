@@ -46,7 +46,7 @@ class Despot : AbstractPerk(), MegaStreak, Listener, IPlayerDamaged, IAttackEnti
 
     override fun getInternalPerkName() = "despot_streak"
 
-    override fun getDisplayName() = "&c暴君"
+    override fun getDisplayName() = "&c&l暴君"
 
     override fun getIcon() = Material.REDSTONE
 

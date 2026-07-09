@@ -45,7 +45,7 @@ public class OverDriveMegaStreak extends AbstractPerk implements Listener, IPlay
 
     @Override
     public String getDisplayName() {
-        return "&e超速传动";
+        return "&e&l超速传动";
     }
 
     @Override

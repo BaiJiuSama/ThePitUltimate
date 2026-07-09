@@ -39,7 +39,7 @@ public class GrandFinaleMegaStreak extends AbstractPerk implements Listener, Meg
 
     @Override
     public String getDisplayName() {
-        return "&c杰作";
+        return "&c&l杰作";
     }
 
     @Override

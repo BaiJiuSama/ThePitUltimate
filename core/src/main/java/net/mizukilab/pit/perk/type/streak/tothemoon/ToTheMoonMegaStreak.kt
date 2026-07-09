@@ -52,7 +52,7 @@ class ToTheMoonMegaStreak : AbstractPerk(), IPlayerKilledEntity, IPlayerDamaged,
     }
 
     override fun getDisplayName(): String {
-        return "&b月球之旅"
+        return "&b&l月球之旅"
     }
 
     override fun getIcon(): Material {
